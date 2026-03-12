@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwipeAway – Delete Photos Fast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --dark:    #0f0a08;
+      --dark2:   #1c1108;
+      --warm:    #f0906e;
+      --warm2:   #ffb8a8;
+      --red:     #e53935;
+      --green:   #43a047;
+      --text:    #f5ede8;
+      --muted:   rgba(245,237,232,0.45);
+      --surface: rgba(255,255,255,0.04);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      background: linear-gradient(to bottom, rgba(15,10,8,0.95), transparent);
+      backdrop-filter: blur(8px);
+    }
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo .dot-r { color: var(--red); }
+    .nav-logo .dot-g { color: var(--green); }
+    nav a.cta-nav {
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: opacity .2s;
+    }
+    nav a.cta-nav:hover { opacity: .85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 60%, rgba(229,57,53,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 40%, rgba(67,160,71,.10) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(240,144,110,.06) 0%, transparent 70%);
+    }
+    /* Grain */
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 720px; }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .1s;
+    }
+    .hero-eyebrow span { width: 24px; height: 1px; background: var(--muted); display: block; }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(52px, 8vw, 96px);
+      line-height: 1.0;
+      margin-bottom: 8px;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .25s;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--warm);
+    }
+    .hero-arrows {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 28px;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .4s;
+    }
+    .arrow-left svg, .arrow-right svg { width: 72px; height: 24px; }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 48px;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .55s;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      padding: 18px 40px;
+      border-radius: 100px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: transform .2s, opacity .2s;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .7s;
+    }
+    .hero-cta:hover { transform: translateY(-2px); opacity: .9; }
+    .hero-badge {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .85s;
+    }
+
+    /* ── FEATURES ── */
+    .section {
+      padding: 120px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.1;
+      margin-bottom: 64px;
+    }
+    .section-title em { font-style: italic; color: var(--warm); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+    .feature-card {
+      background: var(--surface);
+      padding: 40px 32px;
+      border: 1px solid rgba(255,255,255,.05);
+      transition: background .3s;
+    }
+    .feature-card:first-child { border-radius: 16px 0 0 16px; }
+    .feature-card:last-child  { border-radius: 0 16px 16px 0; }
+    .feature-card:hover { background: rgba(255,255,255,.07); }
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 24px;
+      font-size: 22px;
+    }
+    .icon-red   { background: rgba(229,57,53,.15); }
+    .icon-green { background: rgba(67,160,71,.15); }
+    .icon-warm  { background: rgba(240,144,110,.15); }
+    .icon-blue  { background: rgba(100,160,240,.15); }
+    .feature-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+    .feature-card p { color: var(--muted); line-height: 1.7; font-size: 15px; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      padding: 80px 24px 120px;
+      background: var(--dark2);
+      border-top: 1px solid rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .how-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      margin-top: 64px;
+    }
+    @media (max-width: 640px) { .steps { grid-template-columns: 1fr; gap: 32px; } }
+    .step-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 72px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--warm), rgba(240,144,110,.2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .step h3 { font-size: 18px; font-weight: 500; margin-bottom: 10px; }
+    .step p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+    /* ── PRICING ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 700px;
+    }
+    @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .pricing-card {
+      padding: 40px 32px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .pricing-card.free { background: var(--surface); }
+    .pricing-card.premium {
+      background: linear-gradient(135deg, rgba(67,160,71,.15), rgba(67,160,71,.05));
+      border-color: rgba(67,160,71,.3);
+    }
+    .pricing-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .pricing-price {
+      font-family: 'DM Serif Display', serif;
+      font-size: 48px;
+      margin-bottom: 4px;
+    }
+    .pricing-price span { font-size: 18px; font-family: 'DM Sans', sans-serif; color: var(--muted); }
+    .pricing-sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+    .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .pricing-features li { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+    .pricing-features li::before { content: '✓'; color: var(--green); font-weight: 600; }
+    .pricing-features li.muted-item::before { content: '—'; color: rgba(255,255,255,.2); }
+    .pricing-features li.muted-item { color: rgba(255,255,255,.2); }
+
+    /* ── CTA BAND ── */
+    .cta-band {
+      text-align: center;
+      padding: 120px 24px;
+      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(240,144,110,.08) 0%, transparent 70%);
+    }
+    .cta-band h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(36px, 5vw, 64px);
+      margin-bottom: 40px;
+      line-height: 1.1;
+    }
+    .cta-band h2 em { font-style: italic; color: var(--warm); }
+
+    /* ── PRIVACY ── */
+    .privacy-section {
+      padding: 80px 24px 120px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      background: var(--dark2);
+    }
+    .privacy-inner { max-width: 720px; margin: 0 auto; }
+    .privacy-inner h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .privacy-date { color: var(--muted); font-size: 13px; margin-bottom: 48px; }
+    .privacy-block { margin-bottom: 40px; }
+    .privacy-block h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: var(--warm2);
+    }
+    .privacy-block p, .privacy-block li {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .privacy-block ul { padding-left: 20px; }
+    .privacy-block li { margin-bottom: 6px; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 48px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    footer p { color: var(--muted); font-size: 13px; }
+    footer a { color: var(--muted); text-decoration: none; font-size: 13px; }
+    footer a:hover { color: var(--text); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .section { padding: 80px 24px; }
+      .feature-card:first-child { border-radius: 16px 16px 0 0; }
+      .feature-card:last-child  { border-radius: 0 0 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    Swipe<span class="dot-r">←</span><span class="dot-g">→</span>Away
+  </a>
+  <a class="cta-nav" href="https://play.google.com/store/apps/details?id=com.konis1.swipeaway">
+    Download Free
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span></span> Photo cleaner for Android <span></span></div>
+    <h1>Delete photos<br><em>at the speed</em><br>of a swipe.</h1>
+    <div class="hero-arrows">
+      <!-- Red arrow left -->
+      <svg viewBox="0 0 72 24" fill="none">
+        <defs>
+          <linearGradient id="rg" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#E53935"/>
+            <stop offset="100%" stop-color="#ff6b6b"/>
+          </linearGradient>
+          <filter id="gr"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <line x1="65" y1="12" x2="12" y2="12" stroke="url(#rg)" stroke-width="2.5" stroke-linecap="round" filter="url(#gr)"/>
+        <polyline points="28,4 8,12 28,20" fill="none" stroke="url(#rg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#gr)"/>
+      </svg>
+      <div style="font-size:28px">📷</div>
+      <!-- Green arrow right -->
+      <svg viewBox="0 0 72 24" fill="none">
+        <defs>
+          <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#43A047"/>
+            <stop offset="100%" stop-color="#69f06e"/>
+          </linearGradient>
+          <filter id="gg2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <line x1="7" y1="12" x2="60" y2="12" stroke="url(#gg)" stroke-width="2.5" stroke-linecap="round" filter="url(#gg2)"/>
+        <polyline points="44,4 64,12 44,20" fill="none" stroke="url(#gg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#gg2)"/>
+      </svg>
+    </div>
+    <p class="hero-sub">Swipe left to delete, right to keep. Clean thousands of photos in minutes — not hours.</p>
+    <a class="hero-cta" href="https://play.google.com/store/apps/details?id=com.konis1.swipeaway">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18.5v-13A1.5 1.5 0 0 1 5.06 4.1l13 6.5a1.5 1.5 0 0 1 0 2.8l-13 6.5A1.5 1.5 0 0 1 3 18.5z"/></svg>
+      Get it on Google Play
+    </a>
+    <p class="hero-badge">Free · Android · No account needed</p>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section">
+  <p class="section-label">Why SwipeAway</p>
+  <h2 class="section-title">Built for speed,<br>designed for <em>clarity.</em></h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon icon-red">👈</div>
+      <h3>One gesture</h3>
+      <p>Left to delete, right to keep. Your brain doesn't need to think — just react.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-green">📁</div>
+      <h3>Album by album</h3>
+      <p>Sort WhatsApp, Camera, Screenshots — one album at a time, at your own pace.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-warm">💾</div>
+      <h3>Picks up where you left off</h3>
+      <p>Close the app, come back tomorrow. SwipeAway remembers exactly where you stopped.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-blue">🚫</div>
+      <h3>No subscription. Ever.</h3>
+      <p>Free with optional ads, or pay once to remove them. That's it. No monthly fees.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <p class="section-label" style="text-align:center">How it works</p>
+    <h2 class="section-title" style="text-align:center;margin-bottom:0">Three steps<br>to a <em>clean gallery.</em></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Open SwipeAway</h3>
+        <p>Grant photo access. Choose an album. See exactly how many photos are left to sort.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Swipe to decide</h3>
+        <p>Left = delete, right = keep. Photos are stacked like cards — one at a time, no overwhelm.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Confirm & free space</h3>
+        <p>Deletions are batched. One tap confirms. Your gallery is lighter, your mind is clearer.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="section">
+  <p class="section-label">Pricing</p>
+  <h2 class="section-title">Simple.<br><em>Honest.</em></h2>
+  <div class="pricing-grid">
+    <div class="pricing-card free">
+      <p class="pricing-label">Free</p>
+      <div class="pricing-price">€0</div>
+      <p class="pricing-sub">Forever free</p>
+      <ul class="pricing-features">
+        <li>Unlimited photo sorting</li>
+        <li>All albums</li>
+        <li>Session memory</li>
+        <li class="muted-item">Ads every 50 swipes</li>
+      </ul>
+    </div>
+    <div class="pricing-card premium">
+      <p class="pricing-label">Premium</p>
+      <div class="pricing-price">€4.99 <span>once</span></div>
+      <p class="pricing-sub">No subscription. Ever.</p>
+      <ul class="pricing-features">
+        <li>Everything in Free</li>
+        <li>No ads, forever</li>
+        <li>One-time payment</li>
+        <li>Supports indie dev</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<div class="cta-band">
+  <h2>Your gallery won't<br>clean itself.<br><em>Start swiping.</em></h2>
+  <a class="hero-cta" href="https://play.google.com/store/apps/details?id=com.konis1.swipeaway">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18.5v-13A1.5 1.5 0 0 1 5.06 4.1l13 6.5a1.5 1.5 0 0 1 0 2.8l-13 6.5A1.5 1.5 0 0 1 3 18.5z"/></svg>
+    Download Free on Google Play
+  </a>
+</div>
+
+<!-- PRIVACY POLICY -->
+<section class="privacy-section" id="privacy">
+  <div class="privacy-inner">
+    <h2>Privacy Policy</h2>
+    <p class="privacy-date">Last updated: March 12, 2026</p>
+
+    <div class="privacy-block">
+      <h3>1. Who we are</h3>
+      <p>SwipeAway is developed and maintained by Anthony Christodoulou (auto-entrepreneur, France). Contact: <a href="mailto:christodoulou75@gmail.com" style="color:var(--warm2)">contact@ubicarta.com</a></p>
+    </div>
+
+    <div class="privacy-block">
+      <h3>2. Data we collect</h3>
+      <p>SwipeAway accesses your photo library solely to display photos for sorting. We do <strong>not</strong> upload, store, or transmit your photos to any server.</p>
+      <ul>
+        <li><strong>Photos:</strong> Read locally on your device only. Never uploaded anywhere.</li>
+        <li><strong>Session data:</strong> Which photos you've already sorted, stored locally on your device via SharedPreferences.</li>
+        <li><strong>Purchase status:</strong> Managed by RevenueCat to validate your one-time purchase. See RevenueCat's privacy policy for details.</li>
+        <li><strong>Advertising data:</strong> If you use the free version, Google AdMob may collect device advertising identifiers. See Google's privacy policy for details.</li>
+      </ul>
+    </div>
+
+    <div class="privacy-block">
+      <h3>3. Data we do NOT collect</h3>
+      <ul>
+        <li>We do not collect your name, email, or any personal information</li>
+        <li>We do not create user accounts</li>
+        <li>We do not track your location</li>
+        <li>We do not sell any data to third parties</li>
+        <li>We do not store your photos on any server</li>
+      </ul>
+    </div>
+
+    <div class="privacy-block">
+      <h3>4. Third-party services</h3>
+      <ul>
+        <li><strong>Google AdMob</strong> — advertising (free version only). <a href="https://policies.google.com/privacy" target="_blank" style="color:var(--warm2)">Google Privacy Policy</a></li>
+        <li><strong>RevenueCat</strong> — purchase validation. <a href="https://www.revenuecat.com/privacy" target="_blank" style="color:var(--warm2)">RevenueCat Privacy Policy</a></li>
+        <li><strong>Google Play</strong> — app distribution and payment processing.</li>
+      </ul>
+    </div>
+
+    <div class="privacy-block">
+      <h3>5. Permissions</h3>
+      <ul>
+        <li><strong>READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE:</strong> Required to display your photos for sorting. Photos are never uploaded.</li>
+        <li><strong>INTERNET:</strong> Required for ads (free version) and purchase validation.</li>
+      </ul>
+    </div>
+
+    <div class="privacy-block">
+      <h3>6. Data retention & deletion</h3>
+      <p>All session data is stored locally on your device. You can reset it at any time from the app (Settings → Reset session). Uninstalling the app removes all local data.</p>
+    </div>
+
+    <div class="privacy-block">
+      <h3>7. Children's privacy</h3>
+      <p>SwipeAway is not directed at children under 13. We do not knowingly collect data from children.</p>
+    </div>
+
+    <div class="privacy-block">
+      <h3>8. Your rights (GDPR)</h3>
+      <p>As we collect no personal data on our servers, there is nothing to access, export, or delete on our end. For data held by AdMob or RevenueCat, please contact those services directly or use your device's advertising settings to limit tracking.</p>
+    </div>
+
+    <div class="privacy-block">
+      <h3>9. Contact</h3>
+      <p>Questions about this privacy policy? Contact us at <a href="mailto:christodoulou75@gmail.com" style="color:var(--warm2)">contact@ubicarta.com</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 SwipeAway · Anthony Christodoulou</p>
+  <div style="display:flex;gap:32px">
+    <a href="#privacy">Privacy Policy</a>
+    <a href="mailto:christodoulou75@gmail.com">Contact</a>
+    <a href="https://play.google.com/store/apps/details?id=com.konis1.swipeaway">Google Play</a>
+  </div>
+</footer>
+
+</body>
+</html>
